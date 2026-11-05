@@ -1,0 +1,39 @@
+# ── VIRTUAL ENVIRONMENTS ────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+.bytecoder/
+
+# ── PYTHON CACHE & COMPILATION ──────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.pytest_cache/
+
+# ── LOCAL SECRETS & CONFIGURATIONS (CRITICAL FOR GITHUB) ────────────────
+.env
+.env.*
+.flaskenv
+instance/
+config.py
+secrets.json
+
+# ── DATABASES & SYSTEM LOGS ─────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.log
+flask.out.log
+flask.err.log
+
+# ── SYSTEM & OPERATING SYSTEM JUNK ──────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~

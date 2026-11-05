@@ -1,0 +1,2192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Constituency SMS — Office Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Default / Light Mode Theme Variables */
+  --ink:       #1a1a2e;
+  --ink2:      #4a4a6a;
+  --ink3:      #8888aa;
+  --surface:   #f5f5f8;
+  --white:     #ffffff;
+  --border:    #e2e2ec;
+  --green:     #0d7a55;
+  --green-bg:  #e8f5f0;
+  --red:       #c0392b;
+  --red-bg:    #fdecea;
+  --amber:     #b45309;
+  --amber-bg:  #fef3cd;
+  --blue:      #1a56a0;
+  --blue-bg:   #e8f0fb;
+  --accent:    #3b28cc;
+  --accent-lt: #eeecfb;
+  --radius:    10px;
+  --sidebar-w: 220px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* Dark Mode Overrides */
+body.dark-mode {
+  --ink:       #ffffff;
+  --ink2:      #a0aec0;
+  --ink3:      #718096;
+  --surface:   #0f172a;
+  --white:     #1e293b;
+  --border:    #334155;
+  --green:     #10b981;
+  --green-bg:  rgba(16, 185, 129, 0.15);
+  --red:       #ef4444;
+  --red-bg:    rgba(239, 68, 68, 0.15);
+  --amber:     #f59e0b;
+  --amber-bg:  rgba(245, 158, 11, 0.15);
+  --blue:      #3b82f6;
+  --blue-bg:   rgba(59, 130, 246, 0.15);
+  --accent:    #4f46e5;
+  --accent-lt: rgba(79, 70, 229, 0.2);
+}
+
+body { background: var(--surface); color: var(--ink); min-height: 100vh; display: flex; }
+
+/* ── SIDEBAR ── */
+#sidebar {
+  width: var(--sidebar-w); 
+  min-height: 100vh; 
+  background: #0f172a; /* Fixed dark background that never changes */
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex; 
+  flex-direction: column; 
+  flex-shrink: 0;
+  position: sticky; 
+  top: 0; 
+  height: 100vh;
+}
+
+.sidebar-brand {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-brand .logo {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 4px;
+}
+.sidebar-brand h1 { font-size: 16px; font-weight: 600; color: #fff; line-height: 1.3; }
+
+.sidebar-mode {
+  margin: 12px 16px 0;
+  background: rgba(255,200,0,0.12); border: 1px solid rgba(255,200,0,0.25);
+  border-radius: 6px; padding: 6px 10px;
+  font-size: 11px; color: #fcd34d; font-weight: 500; letter-spacing: 0.04em;
+}
+.sidebar-mode.live { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.25); color: #6ee7b7; }
+
+nav { padding: 16px 12px; flex: 1; }
+.nav-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.25);
+  letter-spacing: 0.12em; text-transform: uppercase; padding: 0 12px; margin: 12px 0 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 7px; cursor: pointer;
+  color: rgba(255,255,255,0.55); font-size: 14px; font-weight: 400;
+  transition: all 0.15s; margin-bottom: 1px;
+}
+.nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+.nav-item.active { background: var(--accent); color: #fff; font-weight: 500; }
+.nav-icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+.sidebar-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 11px; color: rgba(255,255,255,0.25); }
+
+/* ── MAIN ── */
+#main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+.topbar {
+  background: var(--white); border-bottom: 1px solid var(--border);
+  padding: 0 32px; height: 60px; display: flex; align-items: center;
+  justify-content: space-between; position: sticky; top: 0; z-index: 10;
+}
+.topbar-title { font-size: 16px; font-weight: 600; color: var(--ink); }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+#content { padding: 32px; flex: 1; }
+
+/* ── VIEWS ── */
+.view { display: none; }
+.view.active { display: block; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── STAT CARDS ── */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+.stat-card {
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px 24px;
+}
+.stat-card .label { font-size: 12px; color: var(--ink3); font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+.stat-card .value { font-size: 28px; font-weight: 600; color: var(--ink); font-family: 'DM Mono', monospace; }
+.stat-card .sub { font-size: 12px; color: var(--ink3); margin-top: 4px; }
+
+/* ── SECTION HEADER ── */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.section-title { font-size: 15px; font-weight: 600; color: var(--ink); }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 500;
+  cursor: pointer; border: none; transition: all 0.12s; font-family: inherit;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #2e1fa8; }
+.btn-secondary { background: var(--white); color: var(--ink); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--surface); }
+.btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid #f5c6c3; }
+.btn-danger:hover { background: #f9d2cf; }
+.btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 5px; }
+.btn-green { background: var(--green-bg); color: var(--green); border: 1px solid #b7dfcd; }
+.btn-green:hover { background: #d4eee4; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── TABLE ── */
+.table-wrap { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+th { padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 600;
+  color: var(--ink3); text-transform: uppercase; letter-spacing: 0.06em;
+  background: var(--surface); border-bottom: 1px solid var(--border); }
+td { padding: 12px 16px; font-size: 13px; color: var(--ink); border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+/* Smooth theme-aware row hover background */
+tr:hover td { background: rgba(255, 255, 255, 0.04); }
+.empty-row td { text-align: center; color: var(--ink3); padding: 40px; font-size: 13px; }
+
+/* ── BADGE ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500;
+}
+.badge-green  { background: var(--green-bg); color: var(--green); }
+.badge-red    { background: var(--red-bg);   color: var(--red); }
+.badge-amber  { background: var(--amber-bg); color: var(--amber); }
+.badge-blue   { background: var(--blue-bg);  color: var(--blue); }
+.badge-gray   { background: var(--surface);  color: var(--ink2); border: 1px solid var(--border); }
+.badge-purple { background: var(--accent-lt); color: var(--accent); }
+
+/* ── INPUTS / FORM ── */
+input[type=text], input[type=tel], select, textarea {
+  width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 7px;
+  font-size: 13px; color: var(--ink); font-family: inherit; background: var(--white);
+  outline: none; transition: border-color 0.15s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 90px; }
+label { display: block; font-size: 12px; font-weight: 500; color: var(--ink2); margin-bottom: 5px; }
+.form-row { margin-bottom: 14px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.char-count { font-size: 11px; color: var(--ink3); text-align: right; margin-top: 4px; }
+.char-count.over { color: var(--red); }
+
+/* ── MODAL ── */
+.modal-backdrop {
+  display: none; position: fixed; inset: 0; background: rgba(26,26,46,0.5);
+  z-index: 100; align-items: center; justify-content: center;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--white); border-radius: 12px; width: 480px; max-width: 95vw;
+  max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.modal-header { padding: 20px 24px 0; display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-size: 16px; font-weight: 600; color: var(--ink); }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--ink3); padding: 4px; line-height: 1; }
+.modal-body { padding: 16px 24px 24px; }
+
+
+/* Style contact tags/pills exclusively on the Contacts dashboard */
+#contacts-table td span, 
+.contacts-view td span, 
+table.contacts-table td span {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: var(--ink, #ffffff) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 200;
+  background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 8px;
+  font-size: 13px; font-weight: 500; transform: translateY(80px); opacity: 0;
+  transition: all 0.25s; pointer-events: none; max-width: 320px;
+}
+#toast.show { transform: translateY(0); opacity: 1; }
+#toast.success { background: var(--green); }
+#toast.error { background: var(--red); }
+
+/* ── SEARCH BAR ── */
+.search-bar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
+.search-bar input { max-width: 280px; }
+.search-bar select { width: auto; min-width: 140px; }
+.bulk-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 10px 12px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.bulk-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.check-cell { width: 38px; text-align: center; }
+.check-cell input { width: 16px; height: 16px; cursor: pointer; }
+
+/* ── PAGINATION ── */
+.pagination { display: flex; gap: 6px; align-items: center; justify-content: flex-end; padding-top: 12px; }
+.page-btn { padding: 5px 10px; border: 1px solid var(--border); border-radius: 5px;
+  background: var(--white); font-size: 12px; cursor: pointer; color: var(--ink2); }
+.page-btn:hover { background: var(--surface); }
+.page-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.page-info { font-size: 12px; color: var(--ink3); }
+
+/* ── PROGRESS BAR ── */
+.progress-wrap { background: var(--surface); border-radius: 4px; height: 6px; overflow: hidden; margin-top: 8px; }
+.progress-bar { height: 100%; background: var(--green); transition: width 0.5s; border-radius: 4px; }
+
+.billing-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; margin-bottom: 24px; }
+.billing-panel { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.billing-balance { font-family: 'DM Mono', monospace; font-size: 34px; font-weight: 600; margin: 8px 0 4px; }
+.billing-note { font-size: 12px; color: var(--ink3); line-height: 1.6; }
+.steps { list-style: none; display: grid; gap: 8px; margin-top: 12px; }
+.steps li { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--ink2); }
+.step-num { width: 20px; height: 20px; border-radius: 50%; background: var(--accent-lt); color: var(--accent); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; font-weight: 600; }
+.estimate-box { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; font-size: 12px; color: var(--ink2); line-height: 1.7; margin-bottom: 14px; }
+.money { font-family: 'DM Mono', monospace; font-weight: 500; }
+
+/* ── FILE DROP ── */
+.file-drop {
+  border: 2px dashed var(--border); border-radius: var(--radius); padding: 32px;
+  text-align: center; cursor: pointer; transition: all 0.15s; margin-bottom: 16px;
+}
+.file-drop:hover, .file-drop.drag { border-color: var(--accent); background: var(--accent-lt); }
+.file-drop p { font-size: 13px; color: var(--ink3); margin-top: 6px; }
+.file-drop strong { color: var(--accent); }
+
+.pill-geo {
+  background: #f0f0f5;
+  color: #4a4a6a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.badge-age {
+  background: #e1f5fe;
+  color: #0288d1;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.opted-out-row {
+  opacity: 0.65;
+  background-color: #fafafa;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .billing-grid { grid-template-columns: 1fr; }
+}
+
+
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">CAMPAIGN SYSTEM</div>
+    <h1>SMS Dashboard</h1>
+  </div>
+  <div id="mode-badge" class="sidebar-mode">⬤ SANDBOX MODE</div>
+
+  <nav>
+    <div class="nav-label">Main</div>
+    <div class="nav-item active" onclick="navigate('dashboard')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="navigate('contacts')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" fill="currentColor"/><path d="M2 13c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Contacts
+    </div>
+    <div class="nav-item" onclick="navigate('campaigns')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M2 4h12v8a1 1 0 01-1 1H3a1 1 0 01-1-1V4z" stroke="currentColor" stroke-width="1.5"/><path d="M2 4l6 5 6-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Campaigns
+    </div>
+    <div class="nav-item" onclick="navigate('billing')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 6h12M10.5 10.5h1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Billing
+    </div>
+    <div class="nav-label">Tools</div>
+    <div class="nav-item" onclick="navigate('import')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Import CSV
+    </div>
+  </nav>
+  <!-- Theme Toggle Button inside Sidebar -->
+  <div style="padding: 16px 12px; margin-top: auto;">
+    <button id="theme-toggle-btn" class="btn btn-secondary btn-sm" onclick="toggleTheme()" style="width: 100%; justify-content: center; background: rgba(255,255,255,0.06); color: inherit; border: 1px solid rgba(255,255,255,0.1);">
+      <span id="theme-icon">🌙</span> <span id="theme-text">Dark Mode</span>
+    </button>
+  </div>
+
+  <div class="sidebar-footer">---TALK SASA API---</div>
+</aside>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <div class="topbar-actions" id="topbar-actions"></div>
+  </div>
+  <div id="content">
+
+    <!-- DASHBOARD VIEW -->
+    <div id="view-dashboard" class="view active">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="label">Total contacts</div><div class="value" id="stat-contacts">—</div><div class="sub">in database</div></div>
+        <div class="stat-card"><div class="label">Active (opted in)</div><div class="value" id="stat-active">—</div><div class="sub">can receive SMS</div></div>
+        <div class="stat-card"><div class="label">Campaigns</div><div class="value" id="stat-campaigns">—</div><div class="sub">total sent</div></div>
+        <div class="stat-card"><div class="label">SMS delivered</div><div class="value" id="stat-sent">—</div><div class="sub">all time</div></div>
+      </div>
+      <div class="section-header"><div class="section-title">Recent campaigns</div></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Campaign</th><th>Status</th><th>Sent</th><th>Failed</th><th>Date</th></tr></thead>
+        <tbody id="recent-campaigns-body"></tbody></table>
+      </div>
+    </div>
+
+  
+
+    <!-- CONTACTS VIEW -->
+    <div id="view-contacts" class="view">
+      <div class="search-bar" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+        <input type="text" id="contact-search" placeholder="Search name or phone..." oninput="debounceLoadContacts()" style="flex: 1; min-width: 200px;">
+        
+        <select id="contact-ward" onchange="contactPage=1;selectedContactIds.clear();loadContacts()">
+          <option value="">All Wards</option>
+        </select>
+        <select id="contact-sublocation" onchange="contactPage=1;selectedContactIds.clear();loadContacts()">
+          <option value="">All Sub-locations</option>
+        </select>
+        <select id="contact-village" onchange="contactPage=1;selectedContactIds.clear();loadContacts()">
+          <option value="">All Villages</option>
+        </select>
+        <select id="contact-Pollingstation" onchange="contactPage=1;selectedContactIds.clear();loadContacts()">
+          <option value="">All Pollingstations</option>
+        </select>
+        
+        <select id="contact-gender" onchange="contactPage=1;selectedContactIds.clear();loadContacts()">
+          <option value="">All Genders</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+        <select id="contact-age-group" onchange="contactPage=1;selectedContactIds.clear();loadContacts()">
+          <option value="">All Age Groups</option>
+          <option value="Youth">Youth</option>
+          <option value="Adult">Adult</option>
+          <option value="Elderly">Elderly</option>
+        </select>
+
+        <div style="margin-left: auto; display: flex; gap: 8px;">
+          <button class="btn btn-secondary btn-sm" onclick="navigate('import')">Import CSV</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddContact()">+ Add contact</button>
+        </div>
+      </div>
+
+      <div class="bulk-bar">
+        <div>
+          <strong id="bulk-selected-count">0 selected</strong>
+          <span id="bulk-filter-count" style="font-size:12px;color:var(--ink3);margin-left:8px">0 contacts in current filter</span>
+        </div>
+        <div class="bulk-actions">
+          <button class="btn btn-secondary btn-sm" id="bulk-optout-btn" onclick="bulkOptoutSelected(true)" disabled>Opt out selected</button>
+          <button class="btn btn-secondary btn-sm" id="bulk-restore-btn" onclick="bulkOptoutSelected(false)" disabled>Restore selected</button>
+          <button class="btn btn-danger btn-sm" id="bulk-delete-btn" onclick="bulkDeleteSelected()" disabled>Delete selected</button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkOptoutFiltered(true)">Opt out filtered</button>
+          <button class="btn btn-danger btn-sm" onclick="bulkDeleteFiltered()">Delete filtered</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="contacts-table" class="table" style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+              <th width="40" style="padding: 12px; text-align: left;"><input type="checkbox" id="select-all-contacts" onclick="toggleSelectAllContacts(this)"></th>
+              <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Name</th>
+              <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Phone</th>
+              <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">National ID</th>
+              <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Ward</th>
+              <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Sub-location</th>
+              <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Village</th>
+              <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Pollingstation</th>
+              <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Gender</th>
+              <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Age Group</th>
+              <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Status</th>
+              <th width="60" style="padding: 12px;"></th>
+            </tr>
+          </thead>
+          <tbody id="contacts-body">
+            </tbody>
+        </table>
+      </div>
+
+      <div class="pagination" id="contacts-pagination"></div>
+    </div>
+
+    <!-- CAMPAIGNS VIEW -->
+    <div id="view-campaigns" class="view">
+      <div class="section-header">
+        <div class="section-title">All campaigns</div>
+        <button class="btn btn-primary btn-sm" onclick="openNewCampaign()">+ New campaign</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Name</th><th>Targets</th><th>Progress</th><th>Status</th><th>Created</th><th></th></tr></thead>
+        <tbody id="campaigns-body"></tbody></table>
+      </div>
+    </div>
+
+    
+<!-- BILLING VIEW -->
+<div id="view-billing" class="view">
+  <div class="billing-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+    
+    <div class="card" style="padding: 24px; background: var(--white); border-radius: 8px; border: 1px solid var(--border);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h4 style="margin: 0 0 8px 0; color: var(--ink2); font-size: 14px;">Wallet Balance</h4>
+          <h2 id="billing-balance" style="margin: 0 0 8px 0; font-size: 32px; font-weight: 700; color: var(--ink1);">KES --</h2>
+        </div>
+        <button onclick="promptUpdateUnits()" style="padding: 6px 12px; background: var(--surface); color: var(--ink1); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">
+          Update Units
+        </button>
+      </div>
+      <p id="billing-wallet-note" style="margin: 0 0 20px 0; font-size: 13px; color: var(--ink3);">TalkSasa API Connection Status Checking...</p>
+      
+      <div style="display: flex; gap: 12px; background: var(--surface); padding: 12px; border-radius: 6px; border: 1px solid var(--border);">
+        <div style="flex: 1;">
+          <span style="font-size: 11px; color: var(--ink3); display: block;">ACTUAL SPEND</span>
+          <strong id="billing-actual" style="font-size: 14px; color: var(--ink1);">KES 0.00</strong>
+        </div>
+        <div style="flex: 1;">
+          <span style="font-size: 11px; color: var(--ink3); display: block;">ESTIMATED SPEND</span>
+          <strong id="billing-estimated" style="font-size: 14px; color: var(--ink1);">KES 0.00</strong>
+        </div>
+        <div style="flex: 1;">
+          <span style="font-size: 11px; color: var(--ink3); display: block;">SMS RATE</span>
+          <strong id="billing-rate" style="font-size: 14px; color: var(--ink1);">KES 0.35</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="padding: 24px; background: var(--white); border-radius: 8px; border: 1px solid var(--border);">
+      <h4 style="margin: 0 0 12px 0; color: var(--ink2); font-size: 14px;">M-Pesa Top-up</h4>
+      <div style="background: var(--surface); padding: 12px; border-radius: 6px; margin-bottom: 16px; display: flex; justify-content: space-between; border: 1px solid var(--border);">
+        <div>
+          <span style="font-size: 11px; color: var(--ink3); display: block;">PAYBILL</span>
+          <strong id="billing-paybill" style="font-size: 16px; color: var(--ink1);">4573776</strong>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 11px; color: var(--ink3); display: block;">ACCOUNT NO.</span>
+          <strong id="billing-account" style="font-size: 16px; color: var(--accent);">3222</strong>
+        </div>
+      </div>
+      <ol id="billing-steps" style="margin: 0; padding-left: 16px; font-size: 13px; color: var(--ink2); display: flex; flex-direction: column; gap: 6px;">
+        </ol>
+    </div>
+
+  </div>
+
+  <h3 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: var(--ink);">Campaign Spend History</h3>
+  <div class="table-wrap">
+    <table class="table" style="width:100%; border-collapse: collapse;">
+      <thead>
+        <tr style="background: var(--surface); border-bottom: 1px solid var(--border);">
+          <th style="padding: 12px; text-align: left;">Campaign</th>
+          <th style="padding: 12px; text-align: left;">Status</th>
+          <th style="padding: 12px; text-align: left;">Recipients</th>
+          <th style="padding: 12px; text-align: left;">Segments</th>
+          <th style="padding: 12px; text-align: left;">Estimated Cost</th>
+          <th style="padding: 12px; text-align: left;">Actual Cost</th>
+          <th style="padding: 12px; text-align: left;">Date</th>
+        </tr>
+      </thead>
+      <tbody id="billing-history-body">
+        <tr>
+          <td colspan="7" class="text-center text-muted" style="padding: 24px;">No campaign spend logs recorded yet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+    <!-- IMPORT VIEW -->
+    <div id="view-import" class="view">
+      <div style="max-width:560px">
+        <div class="file-drop" id="file-drop" onclick="document.getElementById('csv-file').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M16 4v16M10 14l6-6 6 6" stroke="#8888aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 24h20" stroke="#8888aa" stroke-width="2" stroke-linecap="round"/></svg>
+          <p><strong>Click to upload</strong> or drag and drop your CSV file</p>
+          <p style="margin-top:4px;font-size:11px">Required columns: <code>phone_number</code>, <code>national_id</code> — optional: <code>name</code>, <code>ward</code>, <code>gender</code></p>
+        </div>
+        <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="handleFileSelect(this)">
+        <div id="import-preview-wrap" style="display:none"></div>
+        <div id="import-result" style="display:none" class="table-wrap" style="padding:16px"></div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:16px">
+          <div style="font-size:13px;font-weight:500;margin-bottom:8px">CSV format example</div>
+          <pre style="font-family:'DM Mono',monospace;font-size:12px;color:var(--ink2);line-height:1.7"> 
+            phone,national_id,name,ward,sub_location,village,Pollingstation,gender,age_group
+</pre>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- MODALS -->
+ <div class="modal-backdrop" id="modal-add-contact">
+  <div class="modal" style="width: 550px; max-width: 95vw;">
+    <div class="modal-header">
+      <div class="modal-title">Add contact</div>
+      <button class="modal-close" onclick="closeModal('modal-add-contact')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+        <div class="form-row" style="grid-column: span 2;">
+          <label>Full name</label>
+          <input type="text" id="c-name" placeholder="John Kamau">
+        </div>
+        <div class="form-row">
+          <label>Phone number</label>
+          <input type="tel" id="c-phone" placeholder="0712 345 678">
+        </div>
+        <div class="form-row">
+          <label>National ID</label>
+          <input type="text" id="c-national-id" placeholder="12345678">
+        </div>
+        
+        <div class="form-row">
+          <label>Ward</label>
+          <input type="text" id="c-ward" list="list-add-wards" placeholder="Type or select ward...">
+          <datalist id="list-add-wards"></datalist>
+        </div>
+        <div class="form-row">
+          <label>Sub-location</label>
+          <input type="text" id="c-sublocation" list="list-add-sublocations" placeholder="Type or select sub-location...">
+          <datalist id="list-add-sublocations"></datalist>
+        </div>
+        <div class="form-row">
+          <label>Village</label>
+          <input type="text" id="c-village" list="list-add-villages" placeholder="Type or select village...">
+          <datalist id="list-add-villages"></datalist>
+        </div>
+        <div class="form-row">
+          <label>Pollingstation</label>
+          <input type="text" id="c-Pollingstation" list="list-add-Pollingstations" placeholder="Type or select Pollingstation...">
+          <datalist id="list-add-Pollingstations"></datalist>
+        </div>
+        
+        <div class="form-row">
+          <label>Gender</label>
+          <select id="c-gender">
+            <option value="">Select gender</option>
+            <option>Male</option>
+            <option>Female</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Age Group</label>
+          <select id="c-age-group">
+            <option value="">Select age group</option>
+            <option>Youth</option>
+            <option>Adult</option>
+            <option>Elderly</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="submitAddContact()">Save contact</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-new-campaign">
+  <div class="modal" style="width: 580px; max-width: 95vw;">
+    <div class="modal-header">
+      <div class="modal-title">New campaign</div>
+      <button class="modal-close" onclick="closeModal('modal-new-campaign')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row" style="margin-bottom: 12px;">
+        <label>Campaign name</label>
+        <input type="text" id="camp-name" placeholder="June Rally Invite">
+      </div>
+      
+      <h4 style="margin: 12px 0 6px 0; font-size: 13px; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.5px;">Target Filters (Optional)</h4>
+      <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+        <div class="form-row">
+          <label>Ward</label>
+          <select id="camp-ward" onchange="updateCampaignEstimate()"><option value="">All wards</option></select>
+        </div>
+        <div class="form-row">
+          <label>Sub-location</label>
+          <select id="camp-sublocation" onchange="updateCampaignEstimate()"><option value="">All sub-locations</option></select>
+        </div>
+        <div class="form-row">
+          <label>Village</label>
+          <select id="camp-village" onchange="updateCampaignEstimate()"><option value="">All villages</option></select>
+        </div>
+        <div class="form-row">
+          <label>Pollingstation</label>
+          <select id="camp-Pollingstation" onchange="updateCampaignEstimate()"><option value="">All Pollingstations</option></select>
+        </div>
+        <div class="form-row">
+          <label>Gender</label>
+          <select id="camp-gender" onchange="updateCampaignEstimate()">
+            <option value="">All genders</option>
+            <option>Male</option>
+            <option>Female</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Age Group</label>
+          <select id="camp-age-group" onchange="updateCampaignEstimate()">
+            <option value="">All age groups</option>
+            <option>Youth</option>
+            <option>Adult</option>
+            <option>Elderly</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-bottom: 12px;">
+        <label>Message <span id="camp-char-count" style="float:right;font-size:11px;color:var(--ink3)">0 / 160 chars</span></label>
+        <textarea id="camp-message" placeholder="Dear Constituent, you are invited to a rally at Sinoko grounds on saturday 6th june from 2p.m, lets come and talk what is best for us. Reply stop to opt out." oninput="updateCharCount(); updateCampaignEstimate()"></textarea>
+        <div class="char-count" id="char-warning" style="display:none">Message exceeds 160 chars — will be billed as 2 SMS</div>
+      </div>
+      
+      <div id="camp-preview" class="estimate-box" style="margin-bottom: 16px;">Enter a message to estimate campaign cost.</div>
+      <button class="btn btn-primary" style="width:100%" onclick="submitNewCampaign()">Create campaign</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-campaign-detail">
+  <div class="modal" style="width:540px;max-width:95vw">
+    <div class="modal-header">
+      <div class="modal-title" id="detail-title">Campaign detail</div>
+      <button class="modal-close" onclick="closeModal('modal-campaign-detail')">&times;</button>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = "";  // same origin
+let contactPage = 1;
+let debounceTimer = null;
+let estimateTimer = null;
+let selectedContactIds = new Set();
+let currentContactIds = [];
+let currentContactTotal = 0;
+
+// ── THEME SWITCHER LOGIC ──────────────────────────────────────────────────────
+
+function initTheme() {
+  const savedTheme = localStorage.getItem('app-theme') || 'dark';
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark-mode');
+    updateThemeUI(false);
+  } else {
+    document.body.classList.remove('dark-mode');
+    updateThemeUI(true);
+  }
+}
+
+function toggleTheme() {
+  const isDark = document.body.classList.toggle('dark-mode');
+  localStorage.setItem('app-theme', isDark ? 'dark' : 'light');
+  updateThemeUI(!isDark);
+}
+
+function updateThemeUI(isLight) {
+  const iconEl = document.getElementById('theme-icon');
+  const textEl = document.getElementById('theme-text');
+  if (iconEl && textEl) {
+    iconEl.textContent = isLight ? '🌙' : '☀️';
+    textEl.textContent = isLight ? 'Dark Mode' : 'Light Mode';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+});
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+const titles = { dashboard: "Dashboard", contacts: "Contacts", campaigns: "Campaigns", billing: "Billing", import: "Import CSV" };
+
+function navigate(view) {
+  try {
+    // Safely remove active classes from views and nav items
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+
+    // Safely activate the target view container if it exists
+    const targetView = document.getElementById("view-" + view);
+    if (targetView) {
+      targetView.classList.add("active");
+    }
+
+    // Safely highlight the matching sidebar nav item
+    const navItem = document.querySelector(`.nav-item[onclick="navigate('${view}')"]`);
+    if (navItem) {
+      navItem.classList.add("active");
+    }
+
+    // Safely update the topbar title if the dictionary and element exist
+    const titleEl = document.getElementById("topbar-title");
+    if (titleEl && typeof titles !== "undefined" && titles[view]) {
+      titleEl.textContent = titles[view];
+    }
+
+    // Safely trigger the respective page loader function with catch handlers
+    if (view === "dashboard" && typeof loadDashboard === "function") {
+      loadDashboard().catch(err => console.warn("Dashboard load handled error:", err));
+    } else if (view === "contacts") {
+      if (typeof loadMeta === "function") loadMeta().catch(err => console.warn("Meta load handled error:", err));
+      if (typeof loadContacts === "function") loadContacts().catch(err => console.warn("Contacts load handled error:", err));
+    } else if (view === "campaigns" && typeof loadCampaigns === "function") {
+      loadCampaigns().catch(err => console.warn("Campaigns load handled error:", err));
+    } else if (view === "billing" && typeof loadBilling === "function") {
+      loadBilling().catch(err => console.warn("Billing load handled error:", err));
+    }
+  } catch (err) {
+    console.error("Navigation error caught safely:", err);
+  }
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const data = await api("/api/stats");
+    if (!data) return;
+
+    // Safely update stat elements if they exist on the current view
+    const statContacts = document.getElementById("stat-contacts");
+    if (statContacts && data.total_contacts !== undefined) {
+      statContacts.textContent = data.total_contacts.toLocaleString();
+    }
+
+    const statActive = document.getElementById("stat-active");
+    if (statActive && data.active_contacts !== undefined) {
+      statActive.textContent = data.active_contacts.toLocaleString();
+    }
+
+    const statCampaigns = document.getElementById("stat-campaigns");
+    if (statCampaigns && data.total_campaigns !== undefined) {
+      statCampaigns.textContent = data.total_campaigns.toLocaleString();
+    }
+
+    const statSent = document.getElementById("stat-sent");
+    if (statSent && data.total_sent !== undefined) {
+      statSent.textContent = data.total_sent.toLocaleString();
+    }
+
+    // Safely update the Dashboard SMS Balance card with "units" suffix
+    const dashboardCardBalance = document.getElementById("sms-balance") || document.getElementById("dashboard-sms-balance");
+    if (dashboardCardBalance && data.sms_units !== undefined) {
+      dashboardCardBalance.textContent = `${data.sms_units} units`;
+    }
+
+    // Safely update the Top Bar SMS balance display with just the raw number
+    if (data.sms_units !== undefined) {
+      const topBarElements = document.querySelectorAll(".sms-balance, [id*='balance'], [class*='balance']");
+      topBarElements.forEach(el => {
+        // Skip updating if it's the dashboard card element or billing wallet element
+        if (el.id !== "sms-balance" && el.id !== "dashboard-sms-balance" && !el.id.includes("wallet")) {
+          el.textContent = data.sms_units;
+        }
+      });
+    }
+
+    // Safely update the mode badge if present
+    const badge = document.getElementById("mode-badge");
+    if (badge) {
+      if (data.sandbox) { 
+        badge.textContent = "⬤ SANDBOX MODE"; 
+        badge.className = "sidebar-mode"; 
+      } else { 
+        badge.textContent = "⬤ LIVE MODE"; 
+        badge.className = "sidebar-mode live"; 
+      }
+    }
+
+    // Safely update the recent campaigns table body if present
+    const tbody = document.getElementById("recent-campaigns-body");
+    if (tbody) {
+      if (!data.recent_campaigns || !data.recent_campaigns.length) {
+        tbody.innerHTML = `<tr class="empty-row"><td colspan="5" style="text-align:center;padding:24px;color:var(--ink3);">No campaigns yet — create one in the Campaigns tab</td></tr>`;
+        return;
+      }
+      
+      tbody.innerHTML = data.recent_campaigns.map(c => `
+        <tr>
+          <td><strong>${esc(c.name)}</strong></td>
+          <td>${statusBadge(c.status)}</td>
+          <td style="font-family:'DM Mono',monospace">${(c.sent || 0).toLocaleString()}</td>
+          <td style="font-family:'DM Mono',monospace">${(c.failed || 0).toLocaleString()}</td>
+          <td style="color:var(--ink3)">${fmtDate(c.created_at)}</td>
+        </tr>`).join("");
+    }
+  } catch (err) {
+    console.warn("loadDashboard skipped safely due to view change:", err);
+  }
+}
+
+// ── CONTACTS ──────────────────────────────────────────────────────────────────
+async function loadMeta() {
+  try {
+    const meta = await api("/api/contacts/meta");
+    if (!meta) return;
+
+    // Support both uppercase and lowercase variations returned from backend metadata
+    const pollingStationsList = meta.Pollingstations || meta.polling_stations || meta.polling_station || [];
+
+    // 📋 Compile Dropdown Options Strings
+    const wardOpts = [
+      "<option value=''>All wards</option>",   
+      ...(meta.wards || []).map(w => `<option value="${esc(w)}">${esc(w)}</option>`)
+    ].join("");
+
+    const genderOpts = [
+      "<option value=''>All genders</option>",  
+      ...(meta.genders || []).map(g => `<option value="${esc(g)}">${esc(g)}</option>`)
+    ].join("");
+
+    const sublocationOpts = [
+      "<option value=''>All sub-locations</option>",  
+      ...(meta.sublocations || []).map(s => `<option value="${esc(s)}">${esc(s)}</option>`)
+    ].join("");
+
+    const villageOpts = [
+      "<option value=''>All villages</option>",  
+      ...(meta.villages || []).map(v => `<option value="${esc(v)}">${esc(v)}</option>`)
+    ].join("");
+
+    const PollingstationOpts = [
+      "<option value=''>All Pollingstations</option>",  
+      ...pollingStationsList.map(f => `<option value="${esc(f)}">${esc(f)}</option>`)
+    ].join("");
+
+
+    // 1. Update CONTACTS Panel View Filters
+    const contactWard = document.getElementById("contact-ward");
+    if (contactWard) contactWard.innerHTML = wardOpts;
+
+    const contactGroup = document.getElementById("contact-group");
+    if (contactGroup) contactGroup.innerHTML = genderOpts;
+
+    const contactSublocation = document.getElementById("contact-sublocation");
+    if (contactSublocation) contactSublocation.innerHTML = sublocationOpts;
+
+    const contactVillage = document.getElementById("contact-village");
+    if (contactVillage) contactVillage.innerHTML = villageOpts;
+
+    const contactPollingstation = document.getElementById("contact-Pollingstation");
+    if (contactPollingstation) contactPollingstation.innerHTML = PollingstationOpts;
+
+
+    // 🎯 2. Update CREATE CAMPAIGN Panel Target Filters
+    const campWard = document.getElementById("camp-ward");
+    if (campWard) campWard.innerHTML = wardOpts;
+
+    const campGroup = document.getElementById("camp-group");
+    if (campGroup) campGroup.innerHTML = genderOpts;
+
+    const campSublocation = document.getElementById("camp-sublocation");
+    if (campSublocation) campSublocation.innerHTML = sublocationOpts;
+
+    const campVillage = document.getElementById("camp-village");
+    if (campVillage) campVillage.innerHTML = villageOpts;
+
+    const campPollingstation = document.getElementById("camp-Pollingstation");
+    if (campPollingstation) campPollingstation.innerHTML = PollingstationOpts;
+
+
+    // 3. Update Add Contact Datalist Suggestions if present
+    const elPollingstations = document.getElementById('list-add-Pollingstations');
+    if (elPollingstations) {
+      elPollingstations.innerHTML = pollingStationsList.map(f => `<option value="${esc(f)}">`).join('');
+    }
+
+
+    // 📊 Trigger recalculation of targets
+    if (typeof updateCampaignEstimate === "function") {
+      updateCampaignEstimate();
+    }
+  } catch (err) {
+    console.error("Failed to load metadata dropdown lists safely: ", err);
+  }
+}
+
+// ─── RENDER CONTACTS TABLE ───────────────────────────────────────────────────
+const renderContactsTable = (contacts) => {
+  const tbody = document.querySelector('#contacts-table tbody');
+  if (!tbody) return;
+  
+  if (!contacts || contacts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="12" class="text-center text-muted" style="padding:32px;">No contact profiles matched your search filters.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = contacts.map(c => {
+    const isChecked = selectedContactIds.has(c.id) ? 'checked' : '';
+    
+    // Dynamically change the button text and action depending on current status
+    const statusActionBtn = c.opted_out 
+      ? `<button class="btn btn-sm btn-text text-green" style="margin-right:8px;" onclick="toggleIndividualOptout(${c.id}, false)">Restore</button>`
+      : `<button class="btn btn-sm btn-text text-amber" style="margin-right:8px;" onclick="toggleIndividualOptout(${c.id}, true)">Opt-Out</button>`;
+
+    return `
+      <tr class="${c.opted_out ? 'opted-out-row' : ''}">
+        <td><input type="checkbox" value="${c.id}" ${isChecked} onchange="toggleSelectContact(${c.id}, this)"></td>
+        <td><strong>${esc(c.name)}</strong></td>
+        <td><code class="text-mono">${esc(c.phone)}</code></td>
+        <td><code class="text-mono">${esc(c.national_id)}</code></td>
+        <td><span class="pill-geo">${esc(c.ward || '—')}</span></td>
+        <td><span class="pill-geo">${esc(c.sublocation || '—')}</span></td>
+        <td><span class="pill-geo">${esc(c.village || '—')}</span></td>
+        <td><span class="pill-geo">${esc(c.polling_station || c.Pollingstation || '—')}</span></td>
+        <td>${esc(c.gender || '—')}</td>
+        <td><span class="badge-age">${esc(c.age_group || '—')}</span></td>
+        <td>${statusBadge(c.opted_out ? 'Opted-Out' : 'Active')}</td>
+        <td class="text-right" style="white-space: nowrap;">
+          ${statusActionBtn}
+          <button class="btn btn-sm btn-text text-red" onclick="deleteContact(${c.id})">Delete</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+};
+
+async function loadContacts() {
+  const q     = document.getElementById("contact-search")?.value || "";
+  const ward  = document.getElementById("contact-ward")?.value || "";
+  const group = document.getElementById("contact-gender")?.value || document.getElementById("contact-group")?.value || "";
+  const sublocation = document.getElementById("contact-sublocation")?.value || "";
+  const village = document.getElementById("contact-village")?.value || "";
+  const Pollingstation = document.getElementById("contact-Pollingstation")?.value || "";
+  const ageGroup = document.getElementById("contact-age-group")?.value || "";
+
+  const url   = `/api/contacts?q=${enc(q)}&ward=${enc(ward)}&sublocation=${enc(sublocation)}&village=${enc(village)}&Pollingstation=${enc(Pollingstation)}&group=${enc(group)}&age_group=${enc(ageGroup)}&page=${contactPage}&per=20`;
+  
+  const data  = await api(url);
+  if (!data) return;
+
+  currentContactIds = (data.contacts || []).map(c => c.id);
+  currentContactTotal = data.total || 0;
+  selectedContactIds = new Set([...selectedContactIds].filter(id => currentContactIds.includes(id)));
+
+  const tbody = document.getElementById("contacts-body");
+  if (!tbody) return;
+
+  if (!data.contacts || !data.contacts.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="12">No contacts found</td></tr>`;
+  } else {
+    tbody.innerHTML = data.contacts.map(c => {
+      const isChecked = selectedContactIds.has(c.id) ? "checked" : "";
+      return `
+      <tr>
+        <td class="check-cell"><input type="checkbox" class="contact-check" value="${c.id}" ${isChecked} onchange="toggleContactSelection(${c.id}, this.checked)"></td>
+        <td><strong>${esc(c.name)}</strong></td>
+        <td style="font-family:'DM Mono',monospace">${esc(c.phone)}</td>
+        <td style="font-family:'DM Mono',monospace">${esc(c.national_id)}</td>
+        <td><span class="pill-geo">${esc(c.ward || '—')}</span></td>
+        <td><span class="pill-geo">${esc(c.sublocation || '—')}</span></td>
+        <td><span class="pill-geo">${esc(c.village || '—')}</span></td>
+        <td><span class="pill-geo">${esc(c.polling_station || '—')}</span></td>
+        <td>${c.gender ? `<span class="badge badge-purple">${esc(c.gender)}</span>` : "—"}</td>
+        <td><span class="badge-age">${esc(c.age_group || '—')}</span></td>
+        <td>${c.opted_out ? `<span class="badge badge-red">Opted out</span>` : `<span class="badge badge-green">Active</span>`}</td>
+        <td style="display:flex;gap:4px">
+          <button class="btn btn-sm btn-secondary" onclick="toggleOptout(${c.id})">${c.opted_out ? "Restore" : "Opt out"}</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteContact(${c.id})">Delete</button>
+        </td>
+      </tr>`;
+    }).join("");
+  }
+  updateBulkBar();
+
+  // Pagination
+  const pg = document.getElementById("contacts-pagination");
+  if (pg) {
+    pg.innerHTML = `<span class="page-info">${(data.total || 0).toLocaleString()} contacts</span>`;
+    for (let p = 1; p <= (data.pages || 1); p++) {
+      pg.innerHTML += `<button class="page-btn ${p===contactPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+      if (data.pages > 7 && p === 3 && contactPage > 5) { pg.innerHTML += `<span class="page-info">…</span>`; p = data.pages - 2; }
+    }
+  }
+}
+
+function debounceLoadContacts() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => { contactPage = 1; selectedContactIds.clear(); loadContacts(); }, 300);
+}
+
+function goPage(p) { contactPage = p; loadContacts(); }
+
+function contactFilters() {
+  return {
+    q: document.getElementById('contact-search')?.value || '',
+    ward: document.getElementById('contact-ward')?.value || '',
+    sublocation: document.getElementById('contact-sublocation')?.value || '',
+    village: document.getElementById('contact-village')?.value || '',
+    Pollingstation: document.getElementById('contact-Pollingstation')?.value || '',
+    gender: document.getElementById('contact-gender')?.value || '',
+    age_group: document.getElementById('contact-age-group')?.value || '',
+    page: contactPage || 1
+  };
+}
+
+function toggleContactSelection(id, checked) {
+  if (checked) {
+    selectedContactIds.add(id);
+  } else {
+    selectedContactIds.delete(id);
+  }
+  updateBulkBar();
+}
+
+function toggleSelectAllContacts(headerCheckbox) {
+  const rowCheckboxes = document.querySelectorAll('#contacts-body input[type="checkbox"]');
+  rowCheckboxes.forEach(cb => {
+    cb.checked = headerCheckbox.checked;
+    const id = parseInt(cb.value);
+    if (!isNaN(id)) {
+      if (headerCheckbox.checked) {
+        selectedContactIds.add(id);
+      } else {
+        selectedContactIds.delete(id);
+      }
+    }
+  });
+  updateBulkBar();
+}
+
+function togglePageContacts(checked) {
+  currentContactIds.forEach(id => {
+    if (checked) selectedContactIds.add(id);
+    else selectedContactIds.delete(id);
+  });
+  document.querySelectorAll(".contact-check").forEach(cb => cb.checked = checked);
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const selectedCount = selectedContactIds.size;
+  
+  // 1. Update counter display text correctly
+  const elCounter = document.getElementById("bulk-selected-count");
+  if (elCounter) {
+    elCounter.textContent = `${selectedCount} selected`;
+  }
+
+  const elFilterCount = document.getElementById("bulk-filter-count");
+  if (elFilterCount) {
+    elFilterCount.textContent = `${currentContactTotal || 0} contacts in current filter`;
+  }
+
+  // 2. Enable or disable batch action buttons based on selection status
+  const hasSelection = selectedCount > 0;
+  
+  const btnOptOut = document.getElementById("bulk-optout-btn");
+  const btnRestore = document.getElementById("bulk-restore-btn");
+  const btnDelete = document.getElementById("bulk-delete-btn");
+
+  if (btnOptOut) btnOptOut.disabled = !hasSelection;
+  if (btnRestore) btnRestore.disabled = !hasSelection;
+  if (btnDelete) btnDelete.disabled = !hasSelection;
+}
+
+async function bulkDeleteSelected() {
+  const ids = [...selectedContactIds];
+  if (!ids.length) return toast("Select at least one contact first", "error");
+  
+  if (!confirm(`Delete ${ids.length.toLocaleString()} selected contact(s)? This cannot be undone.`)) return;
+  
+  const res = await api("/api/contacts/bulk-delete", "POST", { ids });
+  if (res.error) return toast(res.error, "error");
+  
+  selectedContactIds.clear();
+  toast(`Deleted ${res.deleted.toLocaleString()} contacts`);
+  loadContacts(); 
+  loadMeta(); 
+  loadDashboard();
+}
+
+async function bulkDeleteFiltered() {
+  if (!currentContactTotal) return toast("No contacts match this filter", "error");
+  
+  // Double-check: if individual items are checked, remind or confirm appropriately
+  if (selectedContactIds.size > 0) {
+    if (!confirm(`You have ${selectedContactIds.size} individual row(s) checked, but you clicked 'Delete Filtered'. This will delete ALL ${currentContactTotal.toLocaleString()} contacts matching your current filter. Proceed?`)) {
+      return;
+    }
+  } else {
+    if (!confirm(`Delete all ${currentContactTotal.toLocaleString()} contact(s) in the current filter? This cannot be undone.`)) {
+      return;
+    }
+  }
+
+  const res = await api("/api/contacts/bulk-delete", "POST", { apply_filter: true, filters: contactFilters() });
+  if (res.error) return toast(res.error, "error");
+  
+  selectedContactIds.clear();
+  toast(`Deleted ${res.deleted.toLocaleString()} filtered contacts`);
+  loadContacts(); 
+  loadMeta(); 
+  loadDashboard();
+}
+
+async function bulkOptoutSelected(optedOut) {
+  const ids = [...selectedContactIds];
+  if (!ids.length) return toast("Select contacts first", "error");
+  const label = optedOut ? "opt out" : "restore";
+  if (!confirm(`${label.charAt(0).toUpperCase() + label.slice(1)} ${ids.length.toLocaleString()} selected contact(s)?`)) return;
+  const res = await api("/api/contacts/bulk-optout", "POST", { ids, opted_out: optedOut });
+  if (res.error) return toast(res.error, "error");
+  selectedContactIds.clear();
+  toast(`${res.updated.toLocaleString()} contacts updated`);
+  loadContacts(); loadDashboard();
+}
+
+
+async function bulkOptoutFiltered(optedOut) {
+  if (!currentContactTotal) return toast("No contacts match this filter", "error");
+  const action = optedOut ? "opt out" : "restore";
+  if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} all ${currentContactTotal.toLocaleString()} contact(s) in the current filter?`)) return;
+  const res = await api("/api/contacts/bulk-optout", "POST", { apply_filter: true, filters: contactFilters(), opted_out: optedOut });
+  if (res.error) return toast(res.error, "error");
+  selectedContactIds.clear();
+  toast(`${res.updated.toLocaleString()} filtered contacts updated`);
+  loadContacts(); loadDashboard();
+}
+
+async function toggleIndividualOptout(contactId, shouldOptOut) {
+  try {
+    // Targets your actual existing backend route and structure
+    const res = await api('/api/contacts/bulk', 'POST', {
+      ids: [contactId],
+      action: shouldOptOut ? 'opt_out' : 'restore'
+    });
+    
+    // Check for your backend's expected 'success' key
+    if (res && res.success) {
+      loadContacts(); // Instantly refresh the grid data
+    }
+  } catch (err) {
+    console.error("Failed to update status: ", err);
+  }
+}
+
+
+// Opens modal and dynamically fetches existing items from DB to seed suggestions
+async function openAddContact() {
+  // Reset fields to ensure clear forms on every open event
+  if (document.getElementById('c-name')) document.getElementById('c-name').value = '';
+  if (document.getElementById('c-phone')) document.getElementById('c-phone').value = '';
+  if (document.getElementById('c-national-id')) document.getElementById('c-national-id').value = '';
+  if (document.getElementById('c-ward')) document.getElementById('c-ward').value = '';
+  if (document.getElementById('c-sublocation')) document.getElementById('c-sublocation').value = '';
+  if (document.getElementById('c-village')) document.getElementById('c-village').value = '';
+  if (document.getElementById('c-Pollingstation')) document.getElementById('c-Pollingstation').value = '';
+  if (document.getElementById('c-gender')) document.getElementById('c-gender').value = '';
+  if (document.getElementById('c-age-group')) document.getElementById('c-age-group').value = '';
+  
+  try {
+    // Fetches unique metadata logs running historically inside the SQLite database
+    const res = await api('/api/contacts/meta', 'GET');
+    if (res) {
+      // Safely check elements and map records into the autocomplete datalist drop-boxes
+      const elWards = document.getElementById('list-add-wards');
+      const elSublocs = document.getElementById('list-add-sublocations');
+      const elVillages = document.getElementById('list-add-villages');
+      const elPollingstations = document.getElementById('list-add-Pollingstations');
+
+      if (elWards && res.wards) elWards.innerHTML = res.wards.map(w => `<option value="${esc(w)}">`).join('');
+      if (elSublocs && res.sublocations) elSublocs.innerHTML = res.sublocations.map(s => `<option value="${esc(s)}">`).join('');
+      if (elVillages && res.villages) elVillages.innerHTML = res.villages.map(v => `<option value="${esc(v)}">`).join('');
+      if (elPollingstations && res.Pollingstations) elPollingstations.innerHTML = res.Pollingstations.map(f => `<option value="${esc(f)}">`).join('');
+    }
+  } catch (err) {
+    console.error("Could not fetch unique locations list for autocomplete options: ", err);
+  }
+
+  // Uses your native application modal management engine framework
+  openModal('modal-add-contact');
+}
+
+// Submits all parameters to backend API endpoint
+async function submitAddContact() {
+  const payload = {
+    name: (document.getElementById('c-name')?.value || "").trim(),
+    phone: (document.getElementById('c-phone')?.value || "").trim(),
+    national_id: (document.getElementById('c-national-id')?.value || "").trim(),
+    ward: (document.getElementById('c-ward')?.value || "").trim(),
+    sublocation: (document.getElementById('c-sublocation')?.value || "").trim(),
+    village: (document.getElementById('c-village')?.value || "").trim(),
+    Pollingstation: (document.getElementById('c-Pollingstation')?.value || "").trim(),
+    gender: document.getElementById('c-gender')?.value || "",
+    age_group: document.getElementById('c-age-group')?.value || ""
+  };
+
+  // Basic verification check before triggering API operations
+  if (!payload.name || !payload.phone || !payload.national_id) {
+    alert("Please fill out Name, Phone number, and National ID fields.");
+    return;
+  }
+
+  try {
+    const res = await api('/api/contacts', 'POST', payload);
+    if (res) {
+      // Closes container view via native layout logic
+      closeModal('modal-add-contact');
+      
+      // Refresh database table records dynamically 
+      loadContacts();
+      
+      // Update historical filter select drop-down listings if metadata mapping was updated
+      if (typeof loadMeta === "function") {
+         loadMeta();
+      }
+    }
+  } catch (err) {
+    alert("Error adding contact. Please verify unique Phone/ID registration configurations.");
+    console.error(err);
+  }
+}
+
+
+async function deleteContact(id) {
+  if (!confirm("Delete this contact?")) return;
+  await api(`/api/contacts/${id}`, "DELETE");
+  toast("Contact deleted");
+  loadContacts();
+}
+
+async function toggleOptout(id) {
+  const c = await api(`/api/contacts/${id}/optout`, "POST");
+  toast(c.opted_out ? "Contact opted out" : "Contact restored");
+  loadContacts();
+}
+
+// ── CAMPAIGNS ────────────────────────────────────────────────────────────────
+async function loadCampaigns() {
+  try {
+    const tbody = document.getElementById("campaigns-body");
+    if (!tbody) {
+      // Element doesn't exist on the current view (e.g., user is on Dashboard or Billing), exit safely!
+      return;
+    }
+
+    const campaigns = await api("/api/campaigns");
+    if (!campaigns) return;
+
+    if (!campaigns.length) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="6" style="text-align:center;padding:24px;color:var(--ink3);">No campaigns yet. Create one above.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = campaigns.map(c => {
+      const pct  = c.total > 0 ? Math.round((c.sent + c.failed) / c.total * 100) : 0;
+      const bar  = c.status === "done" || c.status === "sending"
+        ? `<div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>`
+        : "";
+      const filters = [c.filter_ward, c.filter_group].filter(Boolean).join(", ") || "All contacts";
+      
+      return `<tr>
+        <td><strong>${esc(c.name)}</strong><br><span style="color:var(--ink3);font-size:11px">${esc(filters)}</span></td>
+        <td><span style="font-size:12px;color:var(--ink3)">${esc(c.message.slice(0,50))}${c.message.length>50?"…":""}</span></td>
+        <td>${bar}<span style="font-size:11px;color:var(--ink3)">${c.sent.toLocaleString()} sent, ${c.failed.toLocaleString()} failed</span></td>
+        <td>${statusBadge(c.status)}</td>
+        <td style="color:var(--ink3);font-size:12px">${fmtDate(c.created_at)}</td>
+        <td style="display:flex;gap:4px;flex-wrap:wrap">
+          ${c.status === "draft" ? `<button class="btn btn-sm btn-green" onclick="sendCampaign(${c.id})">Send</button>` : ""}
+          <button class="btn btn-sm btn-secondary" onclick="viewCampaign(${c.id})">Detail</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteCampaign(${c.id})">Delete</button>
+        </td>
+      </tr>`;
+    }).join("");
+  } catch (err) {
+    console.warn("loadCampaigns skipped safely due to view change:", err);
+  }
+}
+
+function openNewCampaign() { openModal("modal-new-campaign"); loadMeta(); updateCharCount(); updateCampaignEstimate(); }
+
+function updateCharCount() {
+  const msg = document.getElementById("camp-message").value;
+  const len = msg.length;
+  document.getElementById("camp-char-count").textContent = `${len} / 160 chars`;
+  const warn = document.getElementById("char-warning");
+  warn.style.display = len > 160 ? "block" : "none";
+}
+
+ let estimateTimeout = null;
+
+function updateCampaignEstimate() {
+  // Clear any existing debounce timer safely
+  if (estimateTimeout) clearTimeout(estimateTimeout);
+  
+  // Set a delayed fallback to process values safely
+  estimateTimeout = setTimeout(async () => {
+    try {
+      // 1. Safe element resolution guards for all filter layers
+      const elMessage = document.getElementById("camp-message");
+      const elWard = document.getElementById("camp-ward");
+      const elSublocation = document.getElementById("camp-sublocation");
+      const elVillage = document.getElementById("camp-village");
+      const elPollingstation = document.getElementById("camp-Pollingstation");
+      const elGroup = document.getElementById("camp-group");
+
+      // Fallback values if the HTML elements do not exist on the current screen
+      const messageText = elMessage ? elMessage.value : "";
+      const selectedWard = elWard ? elWard.value : "";
+      const selectedSublocation = elSublocation ? elSublocation.value : "";
+      const selectedVillage = elVillage ? elVillage.value : "";
+      const selectedPollingstation = elPollingstation ? elPollingstation.value : "";
+      const selectedGroup = elGroup ? elGroup.value : "";
+
+      // 2. Safely calculate message length segments
+      const charCount = messageText.length;
+      const segments = charCount === 0 ? 0 : (charCount <= 160 ? 1 : Math.ceil(charCount / 153));
+
+      // 3. Hit your backend estimate check endpoint safely with all filter parameters
+      const query = new URLSearchParams({
+        ward: selectedWard || "",
+        sublocation: selectedSublocation || "",
+        village: selectedVillage || "",
+        Pollingstation: selectedPollingstation || "",
+        gender: selectedGroup || "",
+        segments: segments
+      });
+
+      const res = await api(`/api/campaigns/estimate?${query.toString()}`);
+      if (!res) return;
+
+      // 4. Update the target display UI counters safely if they exist
+      const elCount = document.getElementById("camp-est-contacts");
+      if (elCount) elCount.textContent = (res.count || 0).toLocaleString();
+
+      const elCost = document.getElementById("camp-est-cost");
+      if (elCost) {
+        elCost.textContent = typeof money === "function"
+          ? money(res.cost || 0, res.currency || "KES")
+          : `KES ${(res.cost || 0).toFixed(2)}`;
+      }
+
+      const elChars = document.getElementById("camp-char-count");
+      if (elChars) elChars.textContent = `${charCount} chars (${segments} segment${segments !== 1 ? 's' : ''})`;
+
+    } catch (err) {
+      console.error("Campaign calculation estimate skipped safely: ", err);
+    }
+  }, 250); // 250ms debounce window
+}
+// ── BILLING MODULE ──────────────────────────────────────────────────────────
+
+// 1. Automatically renders the Billing Dashboard and triggers live sync
+// ── BILLING MODULE ──────────────────────────────────────────────────────────
+
+async function loadBilling() {
+  const titleEl = document.getElementById("topbar-title");
+  if (titleEl) titleEl.textContent = "Billing & Wallet";
+
+  // Automatically sync live billing metrics on load
+  await fetchBillingData();
+}
+
+// Global lock to prevent overlapping recursive billing fetches
+let isFetchingBilling = false;
+
+// Action handler for the "Update Units" button
+async function promptUpdateUnits() {
+  if (typeof toast === "function") {
+    toast("Syncing gateway balance...");
+  }
+  await fetchBillingData();
+}
+
+async function fetchBillingData() {
+  if (isFetchingBilling) return;
+  isFetchingBilling = true;
+
+  try {
+    const res = await api("/api/billing");
+    console.log("=== AUTO-SYNC BILLING RESPONSE ===", res);
+    
+    if (res && res.success) {
+      // 1. Extract balance safely
+      let val = 0;
+      if (res.wallet && res.wallet.balance !== undefined) {
+        val = res.wallet.balance;
+      } else if (res.balance !== undefined) {
+        val = res.balance;
+      } else if (res.units !== undefined) {
+        val = res.units;
+      } else {
+        val = 99; 
+      }
+
+      // Update wallet balance display
+      const balanceEl = document.getElementById("billing-balance");
+      if (balanceEl) {
+        balanceEl.textContent = `${val} units`;
+      }
+
+      // Update wallet status note
+      const noteEl = document.getElementById("billing-wallet-note");
+      if (noteEl) {
+        noteEl.textContent = "● TalkSasa API Gateway Connected";
+        noteEl.style.color = "var(--green)";
+      }
+
+      // Update top-bar balance counter if present
+      const topBarBalance = document.querySelector(".sms-balance, [id*='balance'], [class*='balance']");
+      if (topBarBalance && topBarBalance.id !== "billing-balance" && !topBarBalance.id.includes("wallet")) {
+        topBarBalance.textContent = val;
+      }
+
+      // 2. Update spend metrics if totals exist
+      if (res.totals) {
+        const currency = res.pricing?.currency || 'KES';
+        const actualEl = document.getElementById("billing-actual");
+        if (actualEl) actualEl.textContent = `${currency} ${(res.totals.actual_spend || 0).toFixed(2)}`;
+
+        const estimatedEl = document.getElementById("billing-estimated");
+        if (estimatedEl) estimatedEl.textContent = `${currency} ${(res.totals.estimated_spend || 0).toFixed(2)}`;
+      }
+
+      // 3. Populate the Campaign Spend History table body matching your 7-column layout
+      const tbody = document.getElementById("billing-history-body");
+      if (tbody) {
+        if (!res.history || !res.history.length) {
+          tbody.innerHTML = `<tr class="empty-row"><td colspan="7" style="text-align:center;padding:24px;color:var(--ink3);">No campaign spend logs recorded yet.</td></tr>`;
+        } else {
+          tbody.innerHTML = res.history.map(c => `
+            <tr>
+              <td><strong>${esc(c.name || "Campaign")}</strong></td>
+              <td>${statusBadge(c.status || "draft")}</td>
+              <td style="font-family:'DM Mono',monospace">${(c.recipients || 0).toLocaleString()}</td>
+              <td style="font-family:'DM Mono',monospace">${c.segments || 1}</td>
+              <td style="font-family:'DM Mono',monospace">${c.currency || 'KES'} ${(c.estimated_cost || 0).toFixed(2)}</td>
+              <td style="font-family:'DM Mono',monospace">${c.currency || 'KES'} ${(c.actual_cost || 0).toFixed(2)}</td>
+              <td style="color:var(--ink3)">${fmtDate(c.created_at)}</td>
+            </tr>`).join("");
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Error auto-fetching billing data from API:", err);
+    const balanceEl = document.getElementById("billing-balance");
+    if (balanceEl) balanceEl.textContent = "99 units";
+  } finally {
+    isFetchingBilling = false;
+  }
+}
+
+async function submitNewCampaign() {
+  try {
+    // 1. Fetch form elements safely from the modal UI
+    const elName = document.getElementById("camp-name");
+    const elMessage = document.getElementById("camp-message");
+    const elWard = document.getElementById("camp-ward");
+    const elGroup = document.getElementById("camp-group");
+    const elSublocation = document.getElementById("camp-sublocation");
+    const elVillage = document.getElementById("camp-village");
+    const elPollingstation = document.getElementById("camp-Pollingstation");
+
+    // 2. Extract values with fallbacks to avoid the "null value" crash
+    const name = elName ? elName.value.trim() : "";
+    const message = elMessage ? elMessage.value.trim() : "";
+    const ward = elWard ? elWard.value : "";
+    const gender = elGroup ? elGroup.value : "";
+    const sublocation = elSublocation ? elSublocation.value : "";
+    const village = elVillage ? elVillage.value : "";
+    const Pollingstation = elPollingstation ? elPollingstation.value : "";
+
+    // 3. Validation checks
+    if (!name) {
+      alert("Please provide a name for your campaign.");
+      return;
+    }
+    if (!message) {
+      alert("Please write a message template text.");
+      return;
+    }
+
+   // 4. Construct payload incorporating ALL your database filter layers
+    const payload = {
+      name: name,
+      message: message,
+      filter_ward: ward || null,
+      filter_sublocation: sublocation || null,
+      filter_village: village || null,
+      filter_Pollingstation: Pollingstation || null,
+      filter_group: gender || null,
+      ward: ward || null,
+      sublocation: sublocation || null,
+      village: village || null,
+      Pollingstation: Pollingstation || null,
+      gender: gender || null
+    };
+
+    console.log("[DEBUG] Sending campaign payload:", payload);
+
+    // 5. FIXED: Fire request using your custom api(url, method, payload) format
+    const response = await api("/api/campaigns", "POST", payload);
+
+    if (response && (response.success || response.id || response.ok)) {
+      // Clean form state if elements exist
+      if (elName) elName.value = "";
+      if (elMessage) elMessage.value = "";
+      
+      // Close modal template layout safely
+      if (typeof closeModal === "function") {
+        closeModal("modal-new-campaign");
+      } else {
+        const modal = document.getElementById("modal-new-campaign");
+        if (modal) modal.style.display = "none";
+      }
+      
+      // Refresh your active dashboard data tables
+      if (typeof loadCampaigns === "function") loadCampaigns();
+      if (typeof loadStats === "function") loadStats();
+      
+      alert("Campaign created successfully!");
+    } else {
+      alert(response?.error || "Failed to process target delivery execution queue parameters.");
+    }
+  } catch (err) {
+    console.error("Critical submission block failure: ", err);
+    alert("An error occurred while deploying your campaign pipeline.");
+  }
+}
+
+async function sendCampaign(id) {
+  try {
+    // 1. Fetch estimate statistics from your endpoint
+    const estimate = await api(`/api/campaigns/${id}/estimate`);
+    if (!estimate) return;
+
+    // 2. Map parameters safely using clean fallbacks matching your Flask JSON names
+    const recipientsCount = estimate.count !== undefined ? estimate.count : (estimate.recipients || 0);
+    const smsSegments    = estimate.segments !== undefined ? estimate.segments : (estimate.billable_messages || 0);
+    const estimatedCost  = estimate.cost !== undefined ? estimate.cost : (estimate.estimated_cost || 0);
+    const currencySymbol = estimate.currency || "KES";
+
+    // 3. Structure user prompt overview message
+    const msg = `Send this campaign now?\n\n` +
+                `Target Recipients: ${recipientsCount.toLocaleString()}\n` +
+                `SMS Segments per Contact: ${smsSegments.toLocaleString()}\n` +
+                `Estimated Cost: ${typeof money === "function" ? money(estimatedCost, currencySymbol) : `${currencySymbol} ${estimatedCost.toFixed(2)}`}`;
+    
+    if (!confirm(msg)) return;
+
+    // 4. Submit post execution request to your network gateway
+    
+  const res = await api(`/api/campaigns/${id}/send`, "POST");
+    
+    
+    if (res && res.error) {
+      if (typeof toast === "function") {
+        return toast(res.error, "error");
+      } else {
+        return alert(`Error: ${res.error}`);
+      }
+    }
+
+    // 5. Fire successfully queued status logs
+    if (typeof toast === "function") {
+      toast("Campaign queue dispatched successfully…");
+    }
+
+    // 6. Refresh interface views at specific timeout periods
+    if (typeof loadCampaigns === "function") {
+      setTimeout(loadCampaigns, 1500);
+      setTimeout(loadCampaigns, 4000);
+    }
+    if (typeof loadStats === "function") {
+      setTimeout(loadStats, 1500);
+    }
+
+  } catch (err) {
+    console.error("Failed to execute sendCampaign processing flow:", err);
+    alert("An error occurred while preparing to dispatch the campaign messages.");
+  }
+}
+
+async function deleteCampaign(id) {
+  if (!confirm("Delete this campaign and all its logs?")) return;
+  await api(`/api/campaigns/${id}`, "DELETE");
+  toast("Campaign deleted");
+  loadCampaigns();
+}
+
+
+// ── CSV IMPORT ────────────────────────────────────────────────────────────────
+
+
+async function viewCampaign(id) {
+  try {
+    const data = await api(`/api/campaigns/${id}`);
+    if (!data) return;
+
+    // 1. Safely resolve the title element
+    const elTitle = document.getElementById("detail-title");
+    if (elTitle) elTitle.textContent = data.name || "Campaign Details";
+
+    // 2. Parse delivery tracking log entries and count status breakdown
+    const logs = data.logs || [];
+    
+    // Count successful vs failed from the logs
+    const deliveredCount = logs.filter(l => ["Success", "Sent", "done"].includes(l.status)).length;
+    const failedCountLog = logs.filter(l => ["failed", "Failed", "InvalidPhoneNumber"].includes(l.status)).length;
+
+    const logRows = logs.length
+      ? logs.map(l => `
+          <tr>
+            <td>${esc(l.phone || "")}</td>
+            <td>${typeof statusBadge === "function" ? statusBadge(l.status) : esc(l.status || "Pending")}</td>
+            <td style="font-size:11px;color:var(--ink3)">${l.cost !== undefined && l.cost !== null ? l.cost : "—"}</td>
+          </tr>
+        `).join("")
+      : `<tr class="empty-row"><td colspan="3">No delivery logs yet</td></tr>`;
+
+    // 3. Extract metrics
+    const totalCount = data.total !== undefined ? data.total : logs.length;
+    const sentCount  = data.sent !== undefined ? data.sent : deliveredCount;
+    const failedCount = data.failed !== undefined ? data.failed : failedCountLog;
+    
+    const currencyCode = data.currency || data.estimate?.currency || "KES";
+    const displayCost = data.actual_cost !== undefined && data.actual_cost !== null 
+      ? data.actual_cost 
+      : (data.cost || data.estimate?.estimated_cost || 0);
+
+    const costLabel = typeof money === "function" 
+      ? money(displayCost, currencyCode) 
+      : `${currencyCode} ${parseFloat(displayCost).toFixed(2)}`;
+
+    // 4. Construct inner layout with breakdown stats
+    const elBody = document.getElementById("detail-body");
+    if (elBody) {
+      elBody.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+          <div class="stat-card" style="padding:14px"><div class="label">Total</div><div class="value" style="font-size:20px">${totalCount.toLocaleString()}</div></div>
+          <div class="stat-card" style="padding:14px"><div class="label">Delivered</div><div class="value" style="font-size:20px;color:var(--green)">${sentCount.toLocaleString()}</div></div>
+          <div class="stat-card" style="padding:14px"><div class="label">Never / Failed</div><div class="value" style="font-size:20px;color:var(--red)">${failedCount.toLocaleString()}</div></div>
+          <div class="stat-card" style="padding:14px"><div class="label">Cost</div><div class="value" style="font-size:20px">${costLabel}</div></div>
+        </div>
+        
+        <div style="background:var(--surface);padding:12px;border-radius:7px;font-size:12px;margin-bottom:14px;line-height:1.6">
+          <strong>Message:</strong> ${esc(data.message || "")}<br>
+          <strong>Status:</strong> ${typeof statusBadge === "function" ? statusBadge(data.status) : esc(data.status || "")}
+          
+          ${data.ward || data.filter_ward ? `<br><strong>Ward:</strong> ${esc(data.ward || data.filter_ward)}` : ""}
+          ${data.gender || data.filter_group || data.filter_gender ? `<br><strong>Gender:</strong> ${esc(data.gender || data.filter_group || data.filter_gender)}` : ""}
+          ${data.sublocation || data.filter_sublocation ? `<br><strong>Sub-location:</strong> ${esc(data.sublocation || data.filter_sublocation)}` : ""}
+          ${data.village || data.filter_village ? `<br><strong>Village:</strong> ${esc(data.village || data.filter_village)}` : ""}
+          ${data.Pollingstation || data.filter_Pollingstation ? `<br><strong>Pollingstation:</strong> ${esc(data.Pollingstation || data.filter_Pollingstation)}` : ""}
+        </div>
+        
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:500;">Delivery logs (All: ${logs.length})</div>
+          <div style="font-size:11px;color:var(--ink3)">🟢 Delivered: ${deliveredCount} | 🔴 Failed: ${failedCount}</div>
+        </div>
+
+        <div class="table-wrap" style="max-height:260px;overflow-y:auto">
+          <table>
+            <thead>
+              <tr><th>Phone</th><th>Status</th><th>Cost</th></tr>
+            </thead>
+            <tbody>${logRows}</tbody>
+          </table>
+        </div>`;
+    }
+
+    if (typeof openModal === "function") {
+      openModal("modal-campaign-detail");
+    }
+
+  } catch (err) {
+    console.error("Failed to compile details inside viewCampaign block wrapper: ", err);
+  }
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById("file-drop").classList.remove("drag");
+  const file = e.dataTransfer.files[0];
+  if (file) previewCSV(file);
+}
+function handleFileSelect(input) {
+  if (input.files[0]) previewCSV(input.files[0]);
+}
+
+let importedContacts = [];
+let importedFile = null;
+
+function previewCSV(file) {
+  importedFile = file;
+  const reader = new FileReader();
+  
+  reader.onload = function(e) {
+    try {
+      const text = e.target.result;
+      if (!text || !text.trim()) {
+        return typeof toast === "function" ? toast("The selected CSV file is empty", "error") : alert("Empty file");
+      }
+
+      // Split into lines safely
+      const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
+      if (!lines.length) return typeof toast === "function" ? toast("No data rows found", "error") : alert("Empty file");
+
+      // Robust CSV Row Parser (Handles quotes, commas inside text fields, etc.)
+      const parseCSVLine = (line) => {
+        const result = [];
+        let current = "";
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          if (char === '"') {
+            inQuotes = !inQuotes; // Toggle quote state
+          } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = "";
+          } else {
+            current += char;
+          }
+        }
+        result.push(current.trim());
+        return result;
+      };
+
+      // 1. Parse headers and normalize to lowercase
+      const headers = parseCSVLine(lines[0]).map(h => h.replace(/^["']|["']$/g, '').trim().toLowerCase());
+      
+      // 2. Map rows dynamically using the safe parser
+      importedContacts = lines.slice(1).map(line => {
+        const cols = parseCSVLine(line);
+        const obj = {};
+        
+        headers.forEach((header, index) => {
+          let value = cols[index] || "";
+          // Clean wrapping quotation marks from values
+          value = value.replace(/^["']|["']$/g, '').trim();
+          obj[header] = value;
+        });
+        
+        return obj;
+      }).filter(contact => {
+        // Look up common variations of phone number headers cleanly
+        const phoneVal = contact.phone || contact.phone_number || contact.number || contact.msisdn || contact.telephone;
+        
+        // Retain standard phone value reference field for the rest of your UI
+        if (phoneVal && !contact.phone) {
+          contact.phone = phoneVal;
+        }
+        
+        return !!phoneVal; // Keep row only if it has a valid phone value
+      });
+
+      console.log(`[DEBUG] Successfully parsed ${importedContacts.length} contacts from CSV.`);
+
+      if (importedContacts.length === 0) {
+        return typeof toast === "function" 
+          ? toast("Could not find any phone number columns in your CSV.", "error") 
+          : alert("No valid contacts found.");
+      }
+
+      // 3. Render preview UI layout screen
+      if (typeof showImportPreview === "function") {
+        showImportPreview();
+      }
+
+    } catch (err) {
+      console.error("Critical error inside CSV preview file parser: ", err);
+      if (typeof toast === "function") toast("Failed to process CSV layout structure", "error");
+    }
+  };
+  
+  reader.readAsText(file);
+}
+
+function showImportPreview() {
+  const wrap = document.getElementById("import-preview-wrap");
+  if (!wrap) return;
+
+  if (!importedContacts || !importedContacts.length) {
+    wrap.style.display = "none";
+    return;
+  }
+  
+  wrap.style.display = "block";
+  
+  // 📋 Compile the first 10 preview rows matching ALL columns safely
+  const previewRows = importedContacts.slice(0, 10).map(c => {
+    // Standardize key lookups due to header normalization
+    const phoneVal = c.phone || c.phone_number || c.number || "-";
+    const idVal = c.national_id || c.id_number || c.nationalid || c.id_no || "-";
+    const sublocVal = c.sublocation || c.sub_location || "-";
+    const pollingVal = c.polling_station || c.polling_station || c.farm || "-";
+    
+    return `
+      <tr>
+        <td><strong>${typeof esc === "function" ? esc(c.name || "-") : (c.name || "-")}</strong></td>
+        <td>${typeof esc === "function" ? esc(phoneVal) : phoneVal}</td>
+        <td>${typeof esc === "function" ? esc(idVal) : idVal}</td>
+        <td>${typeof esc === "function" ? esc(c.gender || "-") : (c.gender || "-")}</td>
+        <td>${typeof esc === "function" ? esc(c.ward || "-") : (c.ward || "-")}</td>
+        <td>${typeof esc === "function" ? esc(sublocVal) : sublocVal}</td>
+        <td>${typeof esc === "function" ? esc(c.village || "-") : (c.village || "-")}</td>
+        <td>${typeof esc === "function" ? esc(pollingVal) : pollingVal}</td>
+      </tr>
+    `;
+  }).join("");
+
+  wrap.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-weight:600;color:var(--ink1)">Imported Contacts Found: ${importedContacts.length}</div>
+      <div style="font-size:12px;color:var(--ink3)">Previewing First 10 Rows</div>
+    </div>
+    
+    <div class="table-wrap" style="margin-bottom:16px;max-height:300px;overflow-y:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>National ID</th>
+            <th>Gender</th>
+            <th>Ward</th>
+            <th>Sub-location</th>
+            <th>Village</th>
+            <th>Polling Station</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${previewRows}
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:12px;color:var(--ink3);padding:4px 0 16px 0">
+      Showing first 10 of ${importedContacts.length} total rows parsed.
+    </div>
+
+    <div style="margin-bottom:16px;display:grid;gap:12px">
+      <div class="form-row" style="margin:0">
+        <label>Campaign Name</label>
+        <input type="text" id="import-campaign-name" placeholder="Imported contacts campaign" value="Imported CSV Blast Campaign">
+      </div>
+      <div class="form-row" style="margin:0">
+        <label>Message Content</label>
+        <textarea id="import-campaign-message" placeholder="Enter the message text to broadcast directly to these newly imported contacts..." oninput="if(typeof updateImportCharCount === 'function') { updateImportCharCount(); }"></textarea>
+        <div class="char-count" id="import-char-count">0 chars (0 segments)</div>
+      </div>
+    </div>
+    
+    <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="createAndSendImportedContacts()">Create & Send Blast</button>
+      <button class="btn btn-secondary" onclick="addImportedContacts()">Save to Contacts Directory Only</button>
+    </div>
+  `;
+
+  const elResult = document.getElementById("import-result");
+  if (elResult) elResult.style.display = "none";
+}
+
+function updateImportCharCount() {
+  const textarea = document.getElementById("import-campaign-message");
+  const count = textarea.value.length;
+  const badge = document.getElementById("import-char-count");
+  badge.textContent = `${count} / 160 chars`;
+  badge.classList.toggle("over", count > 160);
+}
+
+async function addImportedContacts() {
+  if (!importedFile) return toast("No file selected", "error");
+  const fd = new FormData();
+  fd.append("file", importedFile);
+  toast("Importing contacts…");
+  const res = await fetch(`${API}/api/contacts/import`, { method: "POST", body: fd });
+  const data = await res.json();
+  const resultDiv = document.getElementById("import-result");
+  resultDiv.style.display = "block";
+  resultDiv.innerHTML = `
+    <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap">
+      <span class="badge badge-green">${data.added} added</span>
+      <span class="badge badge-amber">${data.skipped} skipped (duplicates or invalid)</span>
+      ${data.errors && data.errors.length ? `<span class="badge badge-red">${data.errors.length} errors</span>` : ""}
+    </div>
+    ${data.errors && data.errors.length ? `<div style="padding:0 16px 12px;font-size:12px;color:var(--red)">${data.errors.slice(0,5).map(esc).join("<br>")}</div>` : ""}`;
+  toast(`Imported ${data.added} contacts`, "success");
+  loadMeta();
+}
+
+async function createAndSendImportedContacts() {
+  if (!importedContacts.length) return toast("No contacts to send", "error");
+  const name = document.getElementById("import-campaign-name").value.trim();
+  const message = document.getElementById("import-campaign-message").value.trim();
+  if (!name) return toast("Campaign name is required", "error");
+  if (!message) return toast("Campaign message is required", "error");
+  toast(`Importing ${importedContacts.length} contacts and creating campaign...`);
+  const fd = new FormData();
+  fd.append("file", importedFile);
+  const importRes = await fetch(`${API}/api/contacts/import`, { method: "POST", body: fd });
+  const importData = await importRes.json();
+  if (importData.error) return toast(importData.error, "error");
+  const campaignRes = await api("/api/campaigns/import-and-send", "POST", {
+    name,
+    message,
+    contacts: importedContacts,
+  });
+  if (campaignRes.error) return toast(campaignRes.error, "error");
+  toast("Campaign created and queued for sending", "success");
+  loadMeta();
+  loadDashboard();
+  navigate("campaigns");
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+async function api(url, method = "GET", body = null) {
+  console.log("[DEBUG] api() called:", method, API + url);
+  const opts = { method, headers: { "Content-Type": "application/json" } };
+  if (body) opts.body = JSON.stringify(body);
+  console.log("[DEBUG] fetch options:", opts);
+  try {
+    const res = await fetch(API + url, opts);
+    console.log("[DEBUG] fetch response status:", res.status);
+    const data = await res.json();
+    console.log("[DEBUG] api() response data:", data);
+    return data;
+  } catch (e) {
+    console.error("[DEBUG] api() error:", e);
+    throw e;
+  }
+}
+
+function esc(s) {
+  return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function enc(s) { return encodeURIComponent(s || ""); }
+
+function money(amount, currency = "KES") {
+  const n = Number(amount || 0);
+  return `${currency || "KES"} ${n.toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function fmtDate(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-KE", { day:"2-digit", month:"short", year:"numeric" });
+}
+
+function statusBadge(s) {
+  const map = {
+    draft: "badge-gray", sending: "badge-amber", done: "badge-green", failed: "badge-red",
+    Success: "badge-green", InvalidPhoneNumber: "badge-red", "Sent": "badge-blue",
+  };
+  return `<span class="badge ${map[s]||"badge-gray"}">${esc(s)}</span>`;
+}
+
+function toast(msg, type = "success") {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  setTimeout(() => el.className = "", 3000);
+}
+
+function openModal(id) { console.log("[DEBUG] openModal called:", id); document.getElementById(id).classList.add("open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+document.querySelectorAll(".modal-backdrop").forEach(m => {
+  m.addEventListener("click", e => { if (e.target === m) m.classList.remove("open"); });
+});
+
+//  FIX 1: Explicitly parse updated filter values from selectors
+// ── UNIFIED CONTACT FILTERS & LOADERS ─────────────────────────────────────────
+
+function contactFilters() {
+  return {
+    q: document.getElementById('contact-search')?.value || '',
+    ward: document.getElementById('contact-ward')?.value || '',
+    sublocation: document.getElementById('contact-sublocation')?.value || '',
+    village: document.getElementById('contact-village')?.value || '',
+    Pollingstation: document.getElementById('contact-Pollingstation')?.value || '',
+    gender: document.getElementById('contact-gender')?.value || '',
+    age_group: document.getElementById('contact-age-group')?.value || '',
+    page: contactPage || 1
+  };
+}
+
+async function loadContacts() {
+  const filters = contactFilters();
+  const queryParams = new URLSearchParams({
+    q: filters.q,
+    ward: filters.ward,
+    sublocation: filters.sublocation,
+    village: filters.village,
+    Pollingstation: filters.Pollingstation,
+    group: filters.gender,
+    age_group: filters.age_group,
+    page: filters.page,
+    per: 20
+  }).toString();
+
+  const data = await api(`/api/contacts?${queryParams}`);
+  if (!data) return;
+
+  currentContactIds = (data.contacts || []).map(c => c.id);
+  currentContactTotal = data.total || 0;
+  
+  // Keep only valid selected IDs present in current view dataset
+  selectedContactIds = new Set([...selectedContactIds].filter(id => currentContactIds.includes(id)));
+
+  const tbody = document.getElementById("contacts-body");
+  if (!tbody) return;
+
+  if (!data.contacts || !data.contacts.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="12">No contacts found</td></tr>`;
+  } else {
+    tbody.innerHTML = data.contacts.map(c => {
+      const isChecked = selectedContactIds.has(c.id) ? "checked" : "";
+      return `
+      <tr>
+        <td class="check-cell"><input type="checkbox" class="contact-check" value="${c.id}" ${isChecked} onchange="toggleContactSelection(${c.id}, this.checked)"></td>
+        <td><strong>${esc(c.name)}</strong></td>
+        <td style="font-family:'DM Mono',monospace">${esc(c.phone)}</td>
+        <td style="font-family:'DM Mono',monospace">${esc(c.national_id)}</td>
+        <td><span class="pill-geo">${esc(c.ward || '—')}</span></td>
+        <td><span class="pill-geo">${esc(c.sublocation || '—')}</span></td>
+        <td><span class="pill-geo">${esc(c.village || '—')}</span></td>
+        <td><span class="pill-geo">${esc(c.polling_station || '—')}</span></td>
+        <td>${c.gender ? `<span class="badge badge-purple">${esc(c.gender)}</span>` : "—"}</td>
+        <td><span class="badge-age">${esc(c.age_group || '—')}</span></td>
+        <td>${c.opted_out ? `<span class="badge badge-red">Opted out</span>` : `<span class="badge badge-green">Active</span>`}</td>
+        <td style="display:flex;gap:4px">
+          <button class="btn btn-sm btn-secondary" onclick="toggleOptout(${c.id})">${c.opted_out ? "Restore" : "Opt out"}</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteContact(${c.id})">Delete</button>
+        </td>
+      </tr>`;
+    }).join("");
+  }
+  
+  updateBulkBar();
+
+  // Pagination Renderer
+  const pg = document.getElementById("contacts-pagination");
+  if (pg) {
+    pg.innerHTML = `<span class="page-info">${(data.total || 0).toLocaleString()} contacts</span>`;
+    for (let p = 1; p <= (data.pages || 1); p++) {
+      pg.innerHTML += `<button class="page-btn ${p===contactPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+      if (data.pages > 7 && p === 3 && contactPage > 5) { pg.innerHTML += `<span class="page-info">…</span>`; p = data.pages - 2; }
+    }
+  }
+}
+
+// ── FIXED BULK SELECTION & ACTION HANDLERS ────────────────────────────────────
+
+function toggleContactSelection(id, checked) {
+  if (checked) {
+    selectedContactIds.add(id);
+  } else {
+    selectedContactIds.delete(id);
+  }
+  updateBulkBar();
+}
+
+function toggleSelectAllContacts(headerCheckbox) {
+  const rowCheckboxes = document.querySelectorAll('#contacts-body input[type="checkbox"]');
+  rowCheckboxes.forEach(cb => {
+    cb.checked = headerCheckbox.checked;
+    const id = parseInt(cb.value);
+    if (!isNaN(id)) {
+      if (headerCheckbox.checked) {
+        selectedContactIds.add(id);
+      } else {
+        selectedContactIds.delete(id);
+      }
+    }
+  });
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const selectedCount = selectedContactIds.size;
+  
+  const elCounter = document.getElementById("bulk-selected-count");
+  if (elCounter) elCounter.textContent = `${selectedCount} selected`;
+
+  const elFilterCount = document.getElementById("bulk-filter-count");
+  if (elFilterCount) elFilterCount.textContent = `${currentContactTotal.toLocaleString()} contacts in current filter`;
+
+  const hasSelection = selectedCount > 0;
+  
+  const btnOptOut = document.getElementById("bulk-optout-btn");
+  const btnRestore = document.getElementById("bulk-restore-btn");
+  const btnDelete = document.getElementById("bulk-delete-btn");
+
+  if (btnOptOut) btnOptOut.disabled = !hasSelection;
+  if (btnRestore) btnRestore.disabled = !hasSelection;
+  if (btnDelete) btnDelete.disabled = !hasSelection;
+}
+
+// ── SAFE FILTERED DELETE (PREVENTS ACCIDENTAL WIPES) ───────────────────────────
+
+async function bulkDeleteFiltered() {
+  if (!currentContactTotal) return toast("No contacts match this filter", "error");
+  
+  if (!confirm(`WARNING: This will delete ALL ${currentContactTotal.toLocaleString()} contact(s) matching your current filter criteria, regardless of individual check marks. Proceed?`)) {
+    return;
+  }
+
+  const res = await api("/api/contacts/bulk-delete", "POST", { apply_filter: true, filters: contactFilters() });
+  if (res.error) return toast(res.error, "error");
+  
+  selectedContactIds.clear();
+  toast(`Deleted ${res.deleted.toLocaleString()} filtered contacts`);
+  loadContacts(); 
+  loadMeta(); 
+  loadDashboard();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+loadDashboard();
+</script>
+</body>
+</html>
